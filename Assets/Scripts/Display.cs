@@ -35,9 +35,6 @@ public class Display : MonoBehaviour
     private string translateVecLayer;
     private string rotateVecLayer;
 
-    //private Vector3 origin_position = new Vector3(0.0f, 0.0f, 0.0f);
-    //private Quaternion origin_rotation = Quaternion.Euler(0,0,0);
-
     void Start()
     {
         button.onClick.AddListener(TaskOnClick);
@@ -45,7 +42,6 @@ public class Display : MonoBehaviour
 
         runtimeModel = ModelLoader.Load(poseNetModel);
         worker = WorkerFactory.CreateWorker(WorkerFactory.Type.Auto, runtimeModel);
-        //outputLayer = runtimeModel.outputs[runtimeModel.outputs.Count - 1];
         translateVecLayer = runtimeModel.outputs[0];
         rotateVecLayer = runtimeModel.outputs[1];
 
@@ -55,7 +51,6 @@ public class Display : MonoBehaviour
     void Update()
     {
 
-
     }
 
     void TaskOnClick()
@@ -63,7 +58,7 @@ public class Display : MonoBehaviour
         tiger.SetActive(true);
         //set the display object in world space
         setObjectCoord(tiger, -7.9372005743993155f, -0.018808338696225977f, -0.755158005882741f, 0.9957989566896625f, -0.0873020608514319f, 0.025496715402473905f, -0.010616286100041216f);
-
+       
         //input frame of the camera, and prepocessing of image
         //frameInput = 
 
@@ -97,57 +92,21 @@ public class Display : MonoBehaviour
         return result;
     }
 
-    void setObjectCoord(float xwx, float xwy, float xwz, float qx, float qy, float qz, float qw)
+    void setObjectCoord(float xwx, float xwy, float xwz, float qw, float qx, float qy, float qz)
     {
-        _camera.transform.position = new Vector3(xwx, xwy, xwz);
-        float[,] xwOrigin = new float[,] {{xwx}, {xwy}, {xwz}};
-        Quaternion camQuat = new Quaternion(qx, qy, qz, qw);
-        camQuat = normalize(camQuat);
-        float[,] camRotationMatrix = CoordTransform.getRotationMatrix(camQuat);
-        float[,] translationVector = CoordTransform.MultiplyMatrix(CoordTransform.NegativeMatrix(camRotationMatrix), xwOrigin);
-        //Debug.Log(translationVector[0,0].ToString()+"\n"+translationVector[1,0].ToString()+"\n"+translationVector[2,0].ToString()+"\n");
-        //Debug.Log(camQuat.x.ToString()+"\n"+camQuat.y.ToString()+"\n"+camQuat.z.ToString()+"\n"+camQuat.w.ToString());
-
-        //1. set right (red)
-        float[,] xcRight = new float[,] {{1},{0},{0}};
-        float[,] xwRight = CoordTransform.MultiplyMatrix(CoordTransform.Transpose(camRotationMatrix), CoordTransform.MinusMatrix(xcRight, translationVector));
-        float[,] vectorRight = CoordTransform.MinusMatrix(xwRight, xwOrigin);
-        Vector3 rightDirection = new Vector3(vectorRight[0,0], vectorRight[1,0], vectorRight[2,0]);
-        //2. set forward (blue)
-        float[,] xcForward = new float[,] {{0},{0},{1}};
-        float[,] xwForward = CoordTransform.MultiplyMatrix(CoordTransform.Transpose(camRotationMatrix), CoordTransform.MinusMatrix(xcForward, translationVector));
-        float[,] vectorForward = CoordTransform.MinusMatrix(xwForward, xwOrigin);
-        Vector3 forwardDirection = new Vector3(vectorForward[0,0], vectorForward[1,0], vectorForward[2,0]);
-
-        Vector3 upDirection = -1*(Vector3.Cross(forwardDirection, rightDirection));
-        Quaternion orientation = Quaternion.LookRotation(forwardDirection, upDirection);
+        Vector3 objPosition = new Vector3(xwx, -xwy, xwz);
+        _camera.transform.position = objPosition;
+        Quaternion orientation = new Quaternion(qx, -qy, qz, qw);
+        orientation = normalize(orientation);
         _camera.transform.rotation = orientation;
     }
-    
-    void setObjectCoord(GameObject gameobject,float tx, float ty, float tz, float qx, float qy, float qz, float qw)
-    {
-        tx = 5*tx;
-        ty = 5*ty;
-        tz = 5*tz;
-        float[,] translationVector = new float[,] {{tx}, {ty}, {tz}};
-        Quaternion camQuat = new Quaternion(qx, qy, qz, qw);
-        float[,] camRotationMatrix = CoordTransform.getRotationMatrix(camQuat);
-        float[,] xcOrigin = new float[,] {{0}, {0}, {0}};
-        float[,] xwOrigin = CoordTransform.MultiplyMatrix(CoordTransform.Transpose(camRotationMatrix), CoordTransform.MinusMatrix(xcOrigin, translationVector));
-        gameobject.transform.position = new Vector3(xwOrigin[0,0], xwOrigin[1,0], xwOrigin[2,0]);
-        //1. set right (red)
-        float[,] xcRight = new float[,] {{1},{0},{0}};
-        float[,] xwRight = CoordTransform.MultiplyMatrix(CoordTransform.Transpose(camRotationMatrix), CoordTransform.MinusMatrix(xcRight, translationVector));
-        float[,] vectorRight = CoordTransform.MinusMatrix(xwRight, xwOrigin);
-        Vector3 rightDirection = new Vector3(vectorRight[0,0], vectorRight[1,0], vectorRight[2,0]);
-        //2. set forward (blue)
-        float[,] xcForward = new float[,] {{0},{0},{1}};
-        float[,] xwForward = CoordTransform.MultiplyMatrix(CoordTransform.Transpose(camRotationMatrix), CoordTransform.MinusMatrix(xcForward, translationVector));
-        float[,] vectorForward = CoordTransform.MinusMatrix(xwForward, xwOrigin);
-        Vector3 forwardDirection = new Vector3(vectorForward[0,0], vectorForward[1,0], vectorForward[2,0]);
 
-        Vector3 upDirection = -1*(Vector3.Cross(forwardDirection, rightDirection));
-        Quaternion orientation = Quaternion.LookRotation(forwardDirection, upDirection);
-        gameobject.transform.rotation = orientation;
+    void setObjectCoord(GameObject gameObject, float xwx, float xwy, float xwz, float qw, float qx, float qy, float qz)
+    {
+        Vector3 objPosition = new Vector3(xwx, -xwy, xwz);
+        gameObject.transform.position = objPosition;
+        Quaternion orientation = new Quaternion(qx, -qy, qz, qw);
+        gameObject.transform.rotation = orientation;
     }
+
 }
